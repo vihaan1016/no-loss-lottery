@@ -1,8 +1,8 @@
 {
   "_format": "hh-sol-cache-2",
   "files": {
-    "/home/vihaan-jain/no-loss-lottery-claude/lottery-contracts/contracts/IAToken.sol": {
-      "lastModificationDate": 1760027037823,
+    "/home/vihaan-jain/no-loss-lottery-parent/no-loss-lottery/lottery-contracts/contracts/IAToken.sol": {
+      "lastModificationDate": 1760122405577,
       "contentHash": "03ff6bc0d869bc2b7006f82f91165474",
       "sourceName": "contracts/IAToken.sol",
       "solcConfig": {
@@ -39,8 +39,8 @@
         "MockAToken"
       ]
     },
-    "/home/vihaan-jain/no-loss-lottery-claude/lottery-contracts/node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol": {
-      "lastModificationDate": 1760026917820,
+    "/home/vihaan-jain/no-loss-lottery-parent/no-loss-lottery/lottery-contracts/node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol": {
+      "lastModificationDate": 1760122407314,
       "contentHash": "59dfce11284f2636db261df9b6a18f81",
       "sourceName": "@openzeppelin/contracts/token/ERC20/ERC20.sol",
       "solcConfig": {
@@ -80,8 +80,8 @@
         "ERC20"
       ]
     },
-    "/home/vihaan-jain/no-loss-lottery-claude/lottery-contracts/node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol": {
-      "lastModificationDate": 1760026917895,
+    "/home/vihaan-jain/no-loss-lottery-parent/no-loss-lottery/lottery-contracts/node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol": {
+      "lastModificationDate": 1760122407314,
       "contentHash": "9261adf6457863de3e9892f51317ec89",
       "sourceName": "@openzeppelin/contracts/token/ERC20/IERC20.sol",
       "solcConfig": {
@@ -116,8 +116,8 @@
         "IERC20"
       ]
     },
-    "/home/vihaan-jain/no-loss-lottery-claude/lottery-contracts/node_modules/@openzeppelin/contracts/utils/Context.sol": {
-      "lastModificationDate": 1760026917805,
+    "/home/vihaan-jain/no-loss-lottery-parent/no-loss-lottery/lottery-contracts/node_modules/@openzeppelin/contracts/utils/Context.sol": {
+      "lastModificationDate": 1760122407310,
       "contentHash": "67bfbc07588eb8683b3fd8f6f909563e",
       "sourceName": "@openzeppelin/contracts/utils/Context.sol",
       "solcConfig": {
@@ -152,8 +152,8 @@
         "Context"
       ]
     },
-    "/home/vihaan-jain/no-loss-lottery-claude/lottery-contracts/node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol": {
-      "lastModificationDate": 1760026917896,
+    "/home/vihaan-jain/no-loss-lottery-parent/no-loss-lottery/lottery-contracts/node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol": {
+      "lastModificationDate": 1760122407314,
       "contentHash": "513778b30d2750f5d2b9b19bbcf748a5",
       "sourceName": "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
       "solcConfig": {
@@ -190,8 +190,8 @@
         "IERC20Metadata"
       ]
     },
-    "/home/vihaan-jain/no-loss-lottery-claude/lottery-contracts/node_modules/@openzeppelin/contracts/interfaces/draft-IERC6093.sol": {
-      "lastModificationDate": 1760026917811,
+    "/home/vihaan-jain/no-loss-lottery-parent/no-loss-lottery/lottery-contracts/node_modules/@openzeppelin/contracts/interfaces/draft-IERC6093.sol": {
+      "lastModificationDate": 1760122407316,
       "contentHash": "5041977bbe908de2e6ed0270447f79ad",
       "sourceName": "@openzeppelin/contracts/interfaces/draft-IERC6093.sol",
       "solcConfig": {
@@ -228,499 +228,8 @@
         "IERC721Errors"
       ]
     },
-    "/home/vihaan-jain/no-loss-lottery-claude/lottery-contracts/contracts/MockAavePool.sol": {
-      "lastModificationDate": 1760027335906,
-      "contentHash": "b96da88f831a72c4bc88af08f723f3c6",
-      "sourceName": "contracts/MockAavePool.sol",
-      "solcConfig": {
-        "version": "0.8.28",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/token/ERC20/IERC20.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.20"
-      ],
-      "artifacts": [
-        "MockAavePool"
-      ]
-    },
-    "/home/vihaan-jain/no-loss-lottery-claude/lottery-contracts/contracts/MockERC20.sol": {
-      "lastModificationDate": 1760043372525,
-      "contentHash": "a7c6c1de3d7f20806bf2cc1315b367c1",
-      "sourceName": "contracts/MockERC20.sol",
-      "solcConfig": {
-        "version": "0.8.28",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/token/ERC20/ERC20.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.20"
-      ],
-      "artifacts": [
-        "MockERC20"
-      ]
-    },
-    "/home/vihaan-jain/no-loss-lottery-claude/lottery-contracts/contracts/Lock.sol": {
-      "lastModificationDate": 1760027037823,
-      "contentHash": "86c4ee6997f8da08a23b6591e24e111a",
-      "sourceName": "contracts/Lock.sol",
-      "solcConfig": {
-        "version": "0.8.28",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.20"
-      ],
-      "artifacts": [
-        "Lock"
-      ]
-    },
-    "/home/vihaan-jain/no-loss-lottery-claude/lottery-contracts/contracts/MockVRFCoordinator.sol": {
-      "lastModificationDate": 1760027037824,
-      "contentHash": "d4a66f0279c3ed87dd969c9f1e3e8838",
-      "sourceName": "contracts/MockVRFCoordinator.sol",
-      "solcConfig": {
-        "version": "0.8.28",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@chainlink/contracts/src/v0.8/vrf/interfaces/VRFCoordinatorV2Interface.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.20"
-      ],
-      "artifacts": [
-        "MockVRFCoordinator"
-      ]
-    },
-    "/home/vihaan-jain/no-loss-lottery-claude/lottery-contracts/node_modules/@chainlink/contracts/src/v0.8/vrf/interfaces/VRFCoordinatorV2Interface.sol": {
-      "lastModificationDate": 1760026919410,
-      "contentHash": "c4963e3862ffee2974cc634689745531",
-      "sourceName": "@chainlink/contracts/src/v0.8/vrf/interfaces/VRFCoordinatorV2Interface.sol",
-      "solcConfig": {
-        "version": "0.8.28",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "VRFCoordinatorV2Interface"
-      ]
-    },
-    "/home/vihaan-jain/no-loss-lottery-claude/lottery-contracts/contracts/NoLossLottery.sol": {
-      "lastModificationDate": 1760027037825,
-      "contentHash": "52f725245de3eaabb55c1f1a5d472f54",
-      "sourceName": "contracts/NoLossLottery.sol",
-      "solcConfig": {
-        "version": "0.8.28",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol",
-        "@chainlink/contracts/src/v0.8/vrf/interfaces/VRFCoordinatorV2Interface.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.20"
-      ],
-      "artifacts": [
-        "IAToken",
-        "IERC20",
-        "IPool",
-        "NoLossLottery"
-      ]
-    },
-    "/home/vihaan-jain/no-loss-lottery-claude/lottery-contracts/node_modules/@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol": {
-      "lastModificationDate": 1760026919404,
-      "contentHash": "06f8ab6bd949cea1abd42940d7965d65",
-      "sourceName": "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol",
-      "solcConfig": {
-        "version": "0.8.28",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.4"
-      ],
-      "artifacts": [
-        "VRFConsumerBaseV2"
-      ]
-    },
-    "/home/vihaan-jain/no-loss-lottery/lottery-contracts/contracts/IAToken.sol": {
-      "lastModificationDate": 1760045012034,
-      "contentHash": "03ff6bc0d869bc2b7006f82f91165474",
-      "sourceName": "contracts/IAToken.sol",
-      "solcConfig": {
-        "version": "0.8.28",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/token/ERC20/ERC20.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.20"
-      ],
-      "artifacts": [
-        "MockAToken"
-      ]
-    },
-    "/home/vihaan-jain/no-loss-lottery/lottery-contracts/node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol": {
-      "lastModificationDate": 1760045011506,
-      "contentHash": "59dfce11284f2636db261df9b6a18f81",
-      "sourceName": "@openzeppelin/contracts/token/ERC20/ERC20.sol",
-      "solcConfig": {
-        "version": "0.8.28",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./IERC20.sol",
-        "./extensions/IERC20Metadata.sol",
-        "../../utils/Context.sol",
-        "../../interfaces/draft-IERC6093.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.20"
-      ],
-      "artifacts": [
-        "ERC20"
-      ]
-    },
-    "/home/vihaan-jain/no-loss-lottery/lottery-contracts/node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol": {
-      "lastModificationDate": 1760045011506,
-      "contentHash": "9261adf6457863de3e9892f51317ec89",
-      "sourceName": "@openzeppelin/contracts/token/ERC20/IERC20.sol",
-      "solcConfig": {
-        "version": "0.8.28",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.4.16"
-      ],
-      "artifacts": [
-        "IERC20"
-      ]
-    },
-    "/home/vihaan-jain/no-loss-lottery/lottery-contracts/node_modules/@openzeppelin/contracts/interfaces/draft-IERC6093.sol": {
-      "lastModificationDate": 1760045011509,
-      "contentHash": "5041977bbe908de2e6ed0270447f79ad",
-      "sourceName": "@openzeppelin/contracts/interfaces/draft-IERC6093.sol",
-      "solcConfig": {
-        "version": "0.8.28",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.8.4"
-      ],
-      "artifacts": [
-        "IERC1155Errors",
-        "IERC20Errors",
-        "IERC721Errors"
-      ]
-    },
-    "/home/vihaan-jain/no-loss-lottery/lottery-contracts/node_modules/@openzeppelin/contracts/utils/Context.sol": {
-      "lastModificationDate": 1760045011502,
-      "contentHash": "67bfbc07588eb8683b3fd8f6f909563e",
-      "sourceName": "@openzeppelin/contracts/utils/Context.sol",
-      "solcConfig": {
-        "version": "0.8.28",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.20"
-      ],
-      "artifacts": [
-        "Context"
-      ]
-    },
-    "/home/vihaan-jain/no-loss-lottery/lottery-contracts/node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol": {
-      "lastModificationDate": 1760045011506,
-      "contentHash": "513778b30d2750f5d2b9b19bbcf748a5",
-      "sourceName": "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
-      "solcConfig": {
-        "version": "0.8.28",
-        "settings": {
-          "evmVersion": "paris",
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../IERC20.sol"
-      ],
-      "versionPragmas": [
-        ">=0.6.2"
-      ],
-      "artifacts": [
-        "IERC20Metadata"
-      ]
-    },
-    "/home/vihaan-jain/no-loss-lottery/lottery-contracts/contracts/MockAavePool.sol": {
-      "lastModificationDate": 1760048115137,
+    "/home/vihaan-jain/no-loss-lottery-parent/no-loss-lottery/lottery-contracts/contracts/MockAavePool.sol": {
+      "lastModificationDate": 1760122405577,
       "contentHash": "6fea99382b6a9bf8143e07dfbde62137",
       "sourceName": "contracts/MockAavePool.sol",
       "solcConfig": {
@@ -758,8 +267,8 @@
         "MockAavePool"
       ]
     },
-    "/home/vihaan-jain/no-loss-lottery/lottery-contracts/contracts/MockERC20.sol": {
-      "lastModificationDate": 1760045012034,
+    "/home/vihaan-jain/no-loss-lottery-parent/no-loss-lottery/lottery-contracts/contracts/MockERC20.sol": {
+      "lastModificationDate": 1760122405577,
       "contentHash": "a7c6c1de3d7f20806bf2cc1315b367c1",
       "sourceName": "contracts/MockERC20.sol",
       "solcConfig": {
@@ -796,8 +305,8 @@
         "MockERC20"
       ]
     },
-    "/home/vihaan-jain/no-loss-lottery/lottery-contracts/contracts/Lock.sol": {
-      "lastModificationDate": 1760045012034,
+    "/home/vihaan-jain/no-loss-lottery-parent/no-loss-lottery/lottery-contracts/contracts/Lock.sol": {
+      "lastModificationDate": 1760122405577,
       "contentHash": "86c4ee6997f8da08a23b6591e24e111a",
       "sourceName": "contracts/Lock.sol",
       "solcConfig": {
@@ -832,8 +341,8 @@
         "Lock"
       ]
     },
-    "/home/vihaan-jain/no-loss-lottery/lottery-contracts/contracts/MockVRFCoordinator.sol": {
-      "lastModificationDate": 1760047951689,
+    "/home/vihaan-jain/no-loss-lottery-parent/no-loss-lottery/lottery-contracts/contracts/MockVRFCoordinator.sol": {
+      "lastModificationDate": 1760122405577,
       "contentHash": "30902a72bc6d403508beade7130a1767",
       "sourceName": "contracts/MockVRFCoordinator.sol",
       "solcConfig": {
@@ -870,8 +379,8 @@
         "MockVRFCoordinator"
       ]
     },
-    "/home/vihaan-jain/no-loss-lottery/lottery-contracts/node_modules/@chainlink/contracts/src/v0.8/vrf/interfaces/VRFCoordinatorV2Interface.sol": {
-      "lastModificationDate": 1760045011703,
+    "/home/vihaan-jain/no-loss-lottery-parent/no-loss-lottery/lottery-contracts/node_modules/@chainlink/contracts/src/v0.8/vrf/interfaces/VRFCoordinatorV2Interface.sol": {
+      "lastModificationDate": 1760122407513,
       "contentHash": "c4963e3862ffee2974cc634689745531",
       "sourceName": "@chainlink/contracts/src/v0.8/vrf/interfaces/VRFCoordinatorV2Interface.sol",
       "solcConfig": {
@@ -906,8 +415,8 @@
         "VRFCoordinatorV2Interface"
       ]
     },
-    "/home/vihaan-jain/no-loss-lottery/lottery-contracts/contracts/NoLossLottery.sol": {
-      "lastModificationDate": 1760045012034,
+    "/home/vihaan-jain/no-loss-lottery-parent/no-loss-lottery/lottery-contracts/contracts/NoLossLottery.sol": {
+      "lastModificationDate": 1760122405577,
       "contentHash": "52f725245de3eaabb55c1f1a5d472f54",
       "sourceName": "contracts/NoLossLottery.sol",
       "solcConfig": {
@@ -948,8 +457,8 @@
         "NoLossLottery"
       ]
     },
-    "/home/vihaan-jain/no-loss-lottery/lottery-contracts/node_modules/@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol": {
-      "lastModificationDate": 1760045011705,
+    "/home/vihaan-jain/no-loss-lottery-parent/no-loss-lottery/lottery-contracts/node_modules/@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol": {
+      "lastModificationDate": 1760122407515,
       "contentHash": "06f8ab6bd949cea1abd42940d7965d65",
       "sourceName": "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol",
       "solcConfig": {
