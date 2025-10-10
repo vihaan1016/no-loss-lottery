@@ -1,390 +1,611 @@
+// NoLossLotteryDApp.jsx
+
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, Wallet, TrendingUp, Users, Clock, Trophy, DollarSign } from 'lucide-react';
 import { ethers } from 'ethers';
 
-const NoLossLotteryUI = () => {
+// NEW: Importing icons and libraries for animations and notifications
+import { motion, AnimatePresence } from 'framer-motion';
+import { Toaster, toast } from 'react-hot-toast';
+import { AlertCircle, Wallet, TrendingUp, Users, Clock, Trophy, DollarSign, Gift, Loader2 } from 'lucide-react';
+
+// In a larger app, these would be in a separate `constants.js` file
+const LOTTERY_ADDRESS = '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707';
+const TOKEN_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
+const LOTTERY_ABI = [ "function deposit(uint256 _amount) external", "function withdraw(uint256 _amount) external", "function getUserBalance(address _user) external view returns (uint256)", "function getPlayerCount() external view returns (uint256)", "function calculatePrize() external view returns (uint256)", "function getTimeRemaining() external view returns (uint256)", "function lastWinner() external view returns (address)", "function lastWinningAmount() external view returns (uint256)", "function owner() external view returns (address)", "function pickWinner() external" ];
+const TOKEN_ABI = [ "function approve(address spender, uint256 amount) external returns (bool)", "function balanceOf(address account) external view returns (uint256)", "function mint(address to, uint256 amount) external" ];
+
+
+const NoLossLotteryDApp = () => {
   const [account, setAccount] = useState('');
   const [isConnected, setIsConnected] = useState(false);
-  const [depositAmount, setDepositAmount] = useState('');
-  const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [userBalance, setUserBalance] = useState('0');
-  const [playerCount, setPlayerCount] = useState('0');
-  const [currentPrize, setCurrentPrize] = useState('0');
-  const [timeRemaining, setTimeRemaining] = useState('0');
-  const [lastWinner, setLastWinner] = useState('');
-  const [lastWinningAmount, setLastWinningAmount] = useState('0');
-  const [isOwner, setIsOwner] = useState(false);
-  const [txStatus, setTxStatus] = useState('');
-  const [tokenBalance, setTokenBalance] = useState('0');
-
-  // Contract addresses (you'll need to update these after deployment)
-  const LOTTERY_ADDRESS = '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707';
-  const TOKEN_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
-
-  // ABIs (simplified - add only the functions you need)
-  const LOTTERY_ABI = [
-    "function deposit(uint256 _amount) external",
-    "function withdraw(uint256 _amount) external",
-    "function getUserBalance(address _user) external view returns (uint256)",
-    "function getPlayerCount() external view returns (uint256)",
-    "function calculatePrize() external view returns (uint256)",
-    "function getTimeRemaining() external view returns (uint256)",
-    "function lastWinner() external view returns (address)",
-    "function lastWinningAmount() external view returns (uint256)",
-    "function owner() external view returns (address)",
-    "function pickWinner() external"
-  ];
-
-  const TOKEN_ABI = [
-    "function approve(address spender, uint256 amount) external returns (bool)",
-    "function balanceOf(address account) external view returns (uint256)",
-    "function mint(address to, uint256 amount) external"
-  ];
 
   const connectWallet = async () => {
-    if (typeof window.ethereum !== 'undefined') {
-      try {
-        const accounts = await window.ethereum.request({ 
-          method: 'eth_requestAccounts' 
-        });
-        setAccount(accounts[0]);
-        setIsConnected(true);
-        setTxStatus('Wallet connected successfully!');
-        await loadContractData(accounts[0]);
-      } catch (error) {
-        setTxStatus('Failed to connect wallet: ' + error.message);
+    // NEW: Using toasts for notifications
+    const connectPromise = new Promise(async (resolve, reject) => {
+      if (typeof window.ethereum !== 'undefined') {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          setAccount(accounts[0]);
+          setIsConnected(true);
+          resolve("Wallet connected successfully!");
+        } catch (error) {
+          reject(error.message || "Failed to connect wallet.");
+        }
+      } else {
+        reject("Please install MetaMask!");
       }
-    } else {
-      setTxStatus('Please install MetaMask!');
-    }
+    });
+
+    toast.promise(connectPromise, {
+      loading: 'Connecting wallet...',
+      success: (message) => message,
+      error: (err) => `Connection failed: ${err}`,
+    });
   };
-
-  const loadContractData = async (userAccount) => {
-    if (typeof window.ethereum !== 'undefined') {
-      try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const lotteryContract = new ethers.Contract(LOTTERY_ADDRESS, LOTTERY_ABI, provider);
-        const tokenContract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, provider);
-
-        const balance = await lotteryContract.getUserBalance(userAccount);
-        setUserBalance(ethers.formatUnits(balance, 18));
-
-        const count = await lotteryContract.getPlayerCount();
-        setPlayerCount(count.toString());
-
-        const prize = await lotteryContract.calculatePrize();
-        setCurrentPrize(ethers.formatUnits(prize, 18));
-
-        const time = await lotteryContract.getTimeRemaining();
-        setTimeRemaining(time.toString());
-
-        const winner = await lotteryContract.lastWinner();
-        setLastWinner(winner);
-
-        const winAmount = await lotteryContract.lastWinningAmount();
-        setLastWinningAmount(ethers.formatUnits(winAmount, 18));
-
-        const ownerAddr = await lotteryContract.owner();
-        setIsOwner(ownerAddr.toLowerCase() === userAccount.toLowerCase());
-
-        const tokenBal = await tokenContract.balanceOf(userAccount);
-        setTokenBalance(ethers.formatUnits(tokenBal, 18));
-      } catch (error) {
-        console.error('Error loading contract data:', error);
-      }
-    }
-  };
-
-  const mintTokens = async () => {
-    if (!isConnected) return;
-    try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const tokenContract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
-
-      setTxStatus('Minting 1000 tokens...');
-      const tx = await tokenContract.mint(account, ethers.parseUnits('1000', 18));
-      await tx.wait();
-      setTxStatus('Tokens minted successfully!');
-      await loadContractData(account);
-    } catch (error) {
-      setTxStatus('Error: ' + error.message);
-    }
-  };
-
-  const handleDeposit = async () => {
-    if (!depositAmount || parseFloat(depositAmount) <= 0) {
-      setTxStatus('Please enter a valid amount');
-      return;
-    }
-
-    try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const lotteryContract = new ethers.Contract(LOTTERY_ADDRESS, LOTTERY_ABI, signer);
-      const tokenContract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
-
-      const amount = ethers.parseUnits(depositAmount, 18);
-
-      setTxStatus('Approving tokens...');
-      const approveTx = await tokenContract.approve(LOTTERY_ADDRESS, amount);
-      await approveTx.wait();
-
-      setTxStatus('Depositing tokens...');
-      const depositTx = await lotteryContract.deposit(amount);
-      await depositTx.wait();
-
-      setTxStatus('Deposit successful!');
-      setDepositAmount('');
-      await loadContractData(account);
-    } catch (error) {
-      setTxStatus('Error: ' + error.message);
-    }
-  };
-
-  const handleWithdraw = async () => {
-    if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
-      setTxStatus('Please enter a valid amount');
-      return;
-    }
-
-    try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const lotteryContract = new ethers.Contract(LOTTERY_ADDRESS, LOTTERY_ABI, signer);
-
-      const amount = ethers.parseUnits(withdrawAmount, 18);
-
-      setTxStatus('Withdrawing tokens...');
-      const tx = await lotteryContract.withdraw(amount);
-      await tx.wait();
-
-      setTxStatus('Withdrawal successful!');
-      setWithdrawAmount('');
-      await loadContractData(account);
-    } catch (error) {
-      setTxStatus('Error: ' + error.message);
-    }
-  };
-
-  const handlePickWinner = async () => {
-    try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const lotteryContract = new ethers.Contract(LOTTERY_ADDRESS, LOTTERY_ABI, signer);
-
-      setTxStatus('Requesting random winner...');
-      const tx = await lotteryContract.pickWinner();
-      await tx.wait();
-
-      setTxStatus('Winner selection initiated! Check events for results.');
-      setTimeout(() => loadContractData(account), 3000);
-    } catch (error) {
-      setTxStatus('Error: ' + error.message);
-    }
-  };
-
-  const formatTime = (seconds) => {
-    const days = Math.floor(seconds / 86400);
-    const hours = Math.floor((seconds % 86400) / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    return `${days}d ${hours}h ${mins}m`;
-  };
-
-  const formatAddress = (addr) => {
-    if (!addr || addr === '0x0000000000000000000000000000000000000000') return 'None';
-    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-  };
-
-  useEffect(() => {
-    if (isConnected) {
-      const interval = setInterval(() => {
-        loadContractData(account);
-      }, 10000);
-      return () => clearInterval(interval);
-    }
-  }, [isConnected, account]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold text-white mb-2 flex items-center justify-center gap-3">
-            <Trophy className="text-yellow-400" size={48} />
-            No Loss Lottery
-          </h1>
-          <p className="text-blue-200 text-lg">Deposit, Earn Yield, Win Prizes - Never Lose Your Principal!</p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white font-sans relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-600/20 via-transparent to-transparent pointer-events-none"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-emerald-600/10 via-transparent to-transparent pointer-events-none"></div>
 
-        {/* Connect Wallet Button */}
-        {!isConnected ? (
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 mb-6 text-center">
-            <button
-              onClick={connectWallet}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-blue-600 hover:to-purple-700 transition-all flex items-center gap-2 mx-auto"
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: 'rgba(30, 41, 59, 0.95)',
+            color: 'white',
+            border: '1px solid rgba(148, 163, 184, 0.2)',
+            borderRadius: '12px',
+            backdropFilter: 'blur(12px)'
+          },
+          success: {
+            iconTheme: {
+              primary: '#10b981',
+              secondary: 'white',
+            },
+          },
+        }}
+      />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <Header />
+
+        <AnimatePresence mode="wait">
+          {!isConnected ? (
+            <motion.div
+              key="connect"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
             >
-              <Wallet size={24} />
-              Connect Wallet
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* Account Info */}
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-blue-200 text-sm">Connected Account</p>
-                  <p className="text-white font-mono text-lg">{formatAddress(account)}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-blue-200 text-sm">Token Balance</p>
-                  <p className="text-white font-bold text-xl">{parseFloat(tokenBalance).toFixed(2)} USDC</p>
-                  <button
-                    onClick={mintTokens}
-                    className="mt-2 bg-green-500 text-white px-4 py-1 rounded-lg text-sm hover:bg-green-600"
-                  >
-                    Mint 1000 Tokens
-                  </button>
-                </div>
-              </div>
-            </div>
+              <ConnectWallet onConnect={connectWallet} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="dashboard"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Dashboard account={account} />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-white/10 backdrop-blur-md rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <DollarSign className="text-green-400" size={24} />
-                  <p className="text-blue-200 text-sm">Your Deposit</p>
-                </div>
-                <p className="text-white text-2xl font-bold">{parseFloat(userBalance).toFixed(2)}</p>
-              </div>
-
-              <div className="bg-white/10 backdrop-blur-md rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <Users className="text-purple-400" size={24} />
-                  <p className="text-blue-200 text-sm">Total Players</p>
-                </div>
-                <p className="text-white text-2xl font-bold">{playerCount}</p>
-              </div>
-
-              <div className="bg-white/10 backdrop-blur-md rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <TrendingUp className="text-yellow-400" size={24} />
-                  <p className="text-blue-200 text-sm">Current Prize</p>
-                </div>
-                <p className="text-white text-2xl font-bold">{parseFloat(currentPrize).toFixed(4)}</p>
-              </div>
-
-              <div className="bg-white/10 backdrop-blur-md rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <Clock className="text-blue-400" size={24} />
-                  <p className="text-blue-200 text-sm">Time Remaining</p>
-                </div>
-                <p className="text-white text-xl font-bold">{formatTime(parseInt(timeRemaining))}</p>
-              </div>
-            </div>
-
-            {/* Main Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              {/* Deposit Card */}
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6">
-                <h2 className="text-2xl font-bold text-white mb-4">Deposit Tokens</h2>
-                <input
-                  type="number"
-                  value={depositAmount}
-                  onChange={(e) => setDepositAmount(e.target.value)}
-                  placeholder="Amount to deposit"
-                  className="w-full bg-white/20 text-white placeholder-blue-200 rounded-lg px-4 py-3 mb-4 outline-none focus:ring-2 focus:ring-blue-400"
-                />
-                <button
-                  onClick={handleDeposit}
-                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition-all"
-                >
-                  Deposit & Join Lottery
-                </button>
-              </div>
-
-              {/* Withdraw Card */}
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6">
-                <h2 className="text-2xl font-bold text-white mb-4">Withdraw Tokens</h2>
-                <input
-                  type="number"
-                  value={withdrawAmount}
-                  onChange={(e) => setWithdrawAmount(e.target.value)}
-                  placeholder="Amount to withdraw"
-                  className="w-full bg-white/20 text-white placeholder-blue-200 rounded-lg px-4 py-3 mb-4 outline-none focus:ring-2 focus:ring-blue-400"
-                />
-                <button
-                  onClick={handleWithdraw}
-                  className="w-full bg-gradient-to-r from-orange-500 to-red-600 text-white py-3 rounded-lg font-semibold hover:from-orange-600 hover:to-red-700 transition-all"
-                >
-                  Withdraw Principal
-                </button>
-              </div>
-            </div>
-
-            {/* Last Winner */}
-            {lastWinner && lastWinner !== '0x0000000000000000000000000000000000000000' && (
-              <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-md rounded-2xl p-6 mb-6 border-2 border-yellow-400/50">
-                <div className="flex items-center gap-3 mb-3">
-                  <Trophy className="text-yellow-400" size={32} />
-                  <h3 className="text-2xl font-bold text-white">Last Winner</h3>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-blue-200 text-sm">Winner Address</p>
-                    <p className="text-white font-mono text-lg">{formatAddress(lastWinner)}</p>
-                  </div>
-                  <div>
-                    <p className="text-blue-200 text-sm">Prize Amount</p>
-                    <p className="text-yellow-400 font-bold text-xl">{parseFloat(lastWinningAmount).toFixed(4)} USDC</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Owner Controls */}
-            {isOwner && (
-              <div className="bg-red-500/20 backdrop-blur-md rounded-2xl p-6 mb-6 border-2 border-red-400/50">
-                <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
-                  <AlertCircle size={24} />
-                  Owner Controls
-                </h3>
-                <button
-                  onClick={handlePickWinner}
-                  className="bg-gradient-to-r from-red-500 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-red-600 hover:to-pink-700 transition-all"
-                >
-                  Pick Winner (Chainlink VRF)
-                </button>
-                <p className="text-blue-200 text-sm mt-2">Only available after lottery duration (7 days)</p>
-              </div>
-            )}
-
-            {/* Status Messages */}
-            {txStatus && (
-              <div className="bg-blue-500/20 backdrop-blur-md rounded-xl p-4 border border-blue-400/50">
-                <p className="text-white">{txStatus}</p>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* Instructions */}
-      <div className="max-w-6xl mx-auto mt-8 bg-white/10 backdrop-blur-md rounded-2xl p-6">
-        <h3 className="text-xl font-bold text-white mb-3">How It Works</h3>
-        <ol className="text-blue-200 space-y-2">
-          <li>1. Connect your wallet and mint test tokens</li>
-          <li>2. Deposit tokens to join the lottery (they're supplied to Aave to earn yield)</li>
-          <li>3. Wait for the lottery duration (7 days)</li>
-          <li>4. Owner picks a winner using Chainlink VRF for true randomness</li>
-          <li>5. Winner receives all the interest earned - everyone keeps their principal!</li>
-          <li>6. Withdraw your principal anytime</li>
-        </ol>
+        <HowItWorks />
       </div>
     </div>
   );
 };
 
-export default NoLossLotteryUI;
+
+// --- Child Components for Cleaner Structure ---
+
+const Header = () => (
+  <header className="text-center mb-12 sm:mb-16">
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="inline-flex items-center justify-center gap-4 mb-4"
+    >
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full blur-xl opacity-50 animate-pulse"></div>
+        <Trophy className="relative text-yellow-400 drop-shadow-2xl" size={56} />
+      </div>
+      <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-50 to-slate-200">
+        No Loss Lottery
+      </h1>
+    </motion.div>
+    <motion.p
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6, delay: 0.2 }}
+      className="text-slate-300 text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed"
+    >
+      Deposit tokens, earn yield, win prizes — your principal is always safe
+    </motion.p>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.6, delay: 0.4 }}
+      className="mt-6 inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-6 py-2 text-sm text-emerald-300"
+    >
+      <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+      100% Principal Protected
+    </motion.div>
+  </header>
+);
+
+const ConnectWallet = ({ onConnect }) => (
+  <motion.div
+    initial={{ scale: 0.9 }}
+    animate={{ scale: 1 }}
+    className="max-w-md mx-auto"
+  >
+    <div className="relative group">
+      <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-500 rounded-3xl blur-lg opacity-50 group-hover:opacity-75 transition duration-500"></div>
+      <div className="relative bg-slate-900/90 backdrop-blur-xl rounded-3xl p-8 border border-slate-700/50">
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-2xl mb-4 border border-blue-500/30">
+            <Wallet className="text-blue-400" size={32} />
+          </div>
+          <h3 className="text-2xl font-bold text-white mb-2">Get Started</h3>
+          <p className="text-slate-400 text-sm">Connect your wallet to participate in the lottery</p>
+        </div>
+        <button
+          onClick={onConnect}
+          className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 flex items-center justify-center gap-3 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:scale-[1.02] active:scale-[0.98]"
+        >
+          <Wallet size={24} />
+          Connect Wallet
+        </button>
+      </div>
+    </div>
+  </motion.div>
+);
+
+const Dashboard = ({ account }) => {
+  // All state related to the dashboard now lives here
+  const [depositAmount, setDepositAmount] = useState('');
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [stats, setStats] = useState({
+    userBalance: '0',
+    playerCount: '0',
+    currentPrize: '0',
+    timeRemaining: '0',
+    lastWinner: '',
+    lastWinningAmount: '0',
+    tokenBalance: '0',
+  });
+  const [isOwner, setIsOwner] = useState(false);
+  // NEW: Dedicated loading states for each action
+  const [loading, setLoading] = useState({
+    mint: false,
+    deposit: false,
+    withdraw: false,
+    pickWinner: false,
+  });
+
+  const loadContractData = async () => {
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const lotteryContract = new ethers.Contract(LOTTERY_ADDRESS, LOTTERY_ABI, provider);
+      const tokenContract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, provider);
+
+      const [balance, count, prize, time, winner, winAmount, ownerAddr, tokenBal] = await Promise.all([
+        lotteryContract.getUserBalance(account),
+        lotteryContract.getPlayerCount(),
+        lotteryContract.calculatePrize(),
+        lotteryContract.getTimeRemaining(),
+        lotteryContract.lastWinner(),
+        lotteryContract.lastWinningAmount(),
+        lotteryContract.owner(),
+        tokenContract.balanceOf(account),
+      ]);
+
+      setStats({
+        userBalance: ethers.formatUnits(balance, 18),
+        playerCount: count.toString(),
+        currentPrize: ethers.formatUnits(prize, 18),
+        timeRemaining: time.toString(),
+        lastWinner: winner,
+        lastWinningAmount: ethers.formatUnits(winAmount, 18),
+        tokenBalance: ethers.formatUnits(tokenBal, 18),
+      });
+      setIsOwner(ownerAddr.toLowerCase() === account.toLowerCase());
+    } catch (error) {
+      console.error('Error loading contract data:', error);
+      toast.error("Failed to load contract data.");
+    }
+  };
+  
+  const handleAction = async (actionFn, loadingKey) => {
+    setLoading(prev => ({ ...prev, [loadingKey]: true }));
+    try {
+      await actionFn();
+      await loadContractData();
+    } finally {
+      setLoading(prev => ({ ...prev, [loadingKey]: false }));
+    }
+  };
+
+  const mintTokens = async () => {
+    const action = async () => {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const tokenContract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
+      const tx = await tokenContract.mint(account, ethers.parseUnits('1000', 18));
+      await tx.wait();
+    };
+    toast.promise(action(), {
+        loading: 'Minting 1000 tokens...',
+        success: 'Tokens minted successfully!',
+        error: (err) => `Mint failed: ${err.reason || err.message}`
+    });
+    await loadContractData();
+  };
+
+  const handleDeposit = async () => {
+    if (!depositAmount || parseFloat(depositAmount) <= 0) {
+      return toast.error('Please enter a valid amount');
+    }
+    const action = async () => {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const lotteryContract = new ethers.Contract(LOTTERY_ADDRESS, LOTTERY_ABI, signer);
+      const tokenContract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
+      const amount = ethers.parseUnits(depositAmount, 18);
+      
+      let approveTx = await tokenContract.approve(LOTTERY_ADDRESS, amount);
+      await approveTx.wait();
+      toast.success("Approval successful! Now depositing...");
+      
+      let depositTx = await lotteryContract.deposit(amount);
+      await depositTx.wait();
+      setDepositAmount('');
+    };
+    handleAction(() => toast.promise(action(), {
+        loading: 'Processing deposit...',
+        success: 'Deposit successful!',
+        error: (err) => `Deposit failed: ${err.reason || err.message}`
+    }), 'deposit');
+  };
+
+  const handleWithdraw = async () => {
+    if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
+        return toast.error('Please enter a valid amount');
+    }
+    const action = async () => {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const lotteryContract = new ethers.Contract(LOTTERY_ADDRESS, LOTTERY_ABI, signer);
+        const amount = ethers.parseUnits(withdrawAmount, 18);
+        const tx = await lotteryContract.withdraw(amount);
+        await tx.wait();
+        setWithdrawAmount('');
+    };
+    handleAction(() => toast.promise(action(), {
+        loading: 'Processing withdrawal...',
+        success: 'Withdrawal successful!',
+        error: (err) => `Withdrawal failed: ${err.reason || err.message}`
+    }), 'withdraw');
+  };
+  
+  const handlePickWinner = async () => {
+    const action = async () => {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const lotteryContract = new ethers.Contract(LOTTERY_ADDRESS, LOTTERY_ABI, signer);
+      const tx = await lotteryContract.pickWinner();
+      await tx.wait();
+      setTimeout(loadContractData, 3000);
+    };
+    handleAction(() => toast.promise(action(), {
+        loading: 'Requesting random winner...',
+        success: 'Winner selection initiated!',
+        error: (err) => `Failed to pick winner: ${err.reason || err.message}`
+    }), 'pickWinner');
+  };
+
+  useEffect(() => {
+    loadContractData();
+    const interval = setInterval(loadContractData, 15000); // Poll every 15s
+    return () => clearInterval(interval);
+  }, [account]);
+
+  const formatTime = (seconds) => {
+    const d = Math.floor(seconds / 86400);
+    const h = Math.floor((seconds % 86400) / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    return `${d}d ${h}h ${m}m`;
+  };
+
+  const formatAddress = (addr) => {
+    if (!addr || addr === ethers.ZeroAddress) return 'None';
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  };
+  
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-3xl p-6 sm:p-8 mb-8 border border-slate-700/50 shadow-2xl"
+      >
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-xl border border-blue-500/30">
+              <Wallet className="text-blue-400" size={24} />
+            </div>
+            <div>
+              <p className="text-slate-400 text-xs uppercase tracking-wider font-medium mb-1">Connected Account</p>
+              <p className="text-white font-mono text-base sm:text-lg font-semibold">{formatAddress(account)}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="text-center sm:text-right">
+              <p className="text-slate-400 text-xs uppercase tracking-wider font-medium mb-1">USDC Balance</p>
+              <p className="text-white font-bold text-2xl sm:text-3xl bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                {parseFloat(stats.tokenBalance).toFixed(2)}
+              </p>
+            </div>
+            <button
+              onClick={mintTokens}
+              disabled={loading.mint}
+              className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 disabled:from-slate-600 disabled:to-slate-700 disabled:shadow-none disabled:cursor-not-allowed hover:scale-105 active:scale-95"
+            >
+              {loading.mint ? <Loader2 className="animate-spin" size={18} /> : <Gift size={18} />}
+              Mint 1000
+            </button>
+          </div>
+        </div>
+      </motion.div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard icon={<DollarSign size={24} />} title="Your Deposit" value={`${parseFloat(stats.userBalance).toFixed(2)} USDC`} />
+        <StatCard icon={<Users size={24} />} title="Total Players" value={stats.playerCount} />
+        <StatCard icon={<TrendingUp size={24} />} title="Current Prize" value={`${parseFloat(stats.currentPrize).toFixed(4)} USDC`} />
+        <StatCard icon={<Clock size={24} />} title="Time Remaining" value={formatTime(parseInt(stats.timeRemaining))} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <ActionCard title="Deposit Tokens" buttonText="Deposit & Join" amount={depositAmount} setAmount={setDepositAmount} action={handleDeposit} color="green" isLoading={loading.deposit}/>
+        <ActionCard title="Withdraw Tokens" buttonText="Withdraw Principal" amount={withdrawAmount} setAmount={setWithdrawAmount} action={handleWithdraw} color="red" isLoading={loading.withdraw}/>
+      </div>
+      
+      <AnimatePresence>
+        {stats.lastWinner && stats.lastWinner !== ethers.ZeroAddress && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.4 }}
+            className="mb-8"
+          >
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 rounded-3xl blur-lg opacity-40 group-hover:opacity-60 transition duration-500 animate-pulse"></div>
+              <div className="relative bg-gradient-to-br from-amber-900/30 to-orange-900/30 backdrop-blur-xl rounded-3xl p-8 border border-yellow-500/30 shadow-2xl">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-yellow-400 rounded-full blur-md opacity-50"></div>
+                    <Trophy className="relative text-yellow-400" size={32} />
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-amber-100">
+                    Latest Winner
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="bg-slate-900/40 rounded-2xl p-4 border border-yellow-500/20">
+                    <p className="text-amber-300 text-xs uppercase tracking-wider font-medium mb-2">Winner Address</p>
+                    <p className="font-mono text-white text-lg font-semibold">{formatAddress(stats.lastWinner)}</p>
+                  </div>
+                  <div className="bg-slate-900/40 rounded-2xl p-4 border border-yellow-500/20">
+                    <p className="text-amber-300 text-xs uppercase tracking-wider font-medium mb-2">Prize Amount</p>
+                    <p className="font-bold text-2xl bg-gradient-to-r from-yellow-300 to-amber-300 bg-clip-text text-transparent">
+                      {parseFloat(stats.lastWinningAmount).toFixed(4)} USDC
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {isOwner && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-red-500/30 to-orange-500/30 rounded-3xl blur opacity-50 group-hover:opacity-75 transition duration-500"></div>
+            <div className="relative bg-gradient-to-br from-red-900/20 to-orange-900/20 backdrop-blur-xl rounded-3xl p-6 border border-red-500/30 shadow-xl">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <AlertCircle className="text-red-400" />
+                Owner Controls
+              </h3>
+              <button
+                onClick={handlePickWinner}
+                disabled={loading.pickWinner}
+                className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 disabled:from-slate-600 disabled:to-slate-700 text-white px-8 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 shadow-lg shadow-red-500/30 hover:shadow-red-500/50 disabled:shadow-none disabled:cursor-not-allowed hover:scale-105 active:scale-95"
+              >
+                {loading.pickWinner && <Loader2 className="animate-spin" size={20} />}
+                <Trophy size={20} />
+                Pick Winner
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </>
+  );
+};
+
+const StatCard = ({ icon, title, value }) => (
+  <motion.div
+    initial={{ opacity: 0, scale: 0.9 }}
+    animate={{ opacity: 1, scale: 1 }}
+    whileHover={{ y: -8, scale: 1.02 }}
+    transition={{ duration: 0.3 }}
+    className="group relative"
+  >
+    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-2xl opacity-0 group-hover:opacity-100 blur transition duration-500"></div>
+    <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 shadow-xl group-hover:border-slate-600/50 transition-all duration-300">
+      <div className="flex flex-col items-center text-center">
+        <div className="mb-3 text-cyan-400 group-hover:scale-110 transition-transform duration-300">
+          {icon}
+        </div>
+        <p className="text-slate-400 text-xs uppercase tracking-wider font-medium mb-2">{title}</p>
+        <p className="text-white text-2xl sm:text-3xl font-bold">{value}</p>
+      </div>
+    </div>
+  </motion.div>
+);
+
+const ActionCard = ({ title, buttonText, amount, setAmount, action, color, isLoading }) => {
+  const colorConfig = {
+    green: {
+      gradient: "from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500",
+      shadow: "shadow-emerald-500/30 hover:shadow-emerald-500/50",
+      icon: <TrendingUp size={20} />,
+      border: "border-emerald-500/30 focus:border-emerald-500/60"
+    },
+    red: {
+      gradient: "from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500",
+      shadow: "shadow-orange-500/30 hover:shadow-orange-500/50",
+      icon: <DollarSign size={20} />,
+      border: "border-orange-500/30 focus:border-orange-500/60"
+    },
+  };
+
+  const config = colorConfig[color];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.3 }}
+      className="group relative"
+    >
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600/20 to-slate-700/20 rounded-3xl opacity-0 group-hover:opacity-100 blur transition duration-500"></div>
+      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-3xl p-8 border border-slate-700/50 shadow-xl group-hover:border-slate-600/50 transition-all duration-300">
+        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+          {config.icon}
+          {title}
+        </h2>
+        <div className="mb-6">
+          <label className="text-slate-400 text-xs uppercase tracking-wider font-medium mb-2 block">Amount (USDC)</label>
+          <input
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="0.00"
+            className={`w-full bg-slate-950/50 text-white placeholder-slate-500 rounded-xl px-5 py-4 text-lg font-semibold outline-none border ${config.border} transition-all duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900`}
+          />
+        </div>
+        <button
+          onClick={action}
+          disabled={isLoading}
+          className={`w-full bg-gradient-to-r ${config.gradient} disabled:from-slate-600 disabled:to-slate-700 text-white py-4 rounded-xl font-semibold text-lg transition-all flex items-center justify-center gap-2 shadow-lg ${config.shadow} disabled:shadow-none disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]`}
+        >
+          {isLoading && <Loader2 className="animate-spin" size={20} />}
+          {buttonText}
+        </button>
+      </div>
+    </motion.div>
+  );
+};
+
+const HowItWorks = () => {
+  const steps = [
+    {
+      number: "01",
+      title: "Connect & Fund",
+      description: "Connect your wallet and mint test tokens to get started with the lottery.",
+      icon: <Wallet size={24} />
+    },
+    {
+      number: "02",
+      title: "Deposit Tokens",
+      description: "Deposit your tokens to join the lottery. Funds are supplied to DeFi protocols to earn yield.",
+      icon: <DollarSign size={24} />
+    },
+    {
+      number: "03",
+      title: "Earn Interest",
+      description: "Your deposit generates yield in the background while you wait for the lottery to conclude.",
+      icon: <TrendingUp size={24} />
+    },
+    {
+      number: "04",
+      title: "Winner Selected",
+      description: "A winner is randomly selected using Chainlink VRF. They receive all accumulated interest!",
+      icon: <Trophy size={24} />
+    },
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.3 }}
+      className="max-w-5xl mx-auto mt-16"
+    >
+      <div className="text-center mb-12">
+        <h3 className="text-3xl sm:text-4xl font-bold text-white mb-3">How It Works</h3>
+        <p className="text-slate-400 text-lg">Simple, transparent, and fair — your principal is always protected</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {steps.map((step, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
+            className="relative group"
+          >
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-2xl opacity-0 group-hover:opacity-100 blur transition duration-500"></div>
+            <div className="relative bg-gradient-to-br from-slate-800/60 to-slate-900/60 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 hover:border-slate-600/50 transition-all duration-300">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-xl flex items-center justify-center border border-blue-500/30 text-cyan-400 group-hover:scale-110 transition-transform duration-300">
+                    {step.icon}
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="text-cyan-400 text-xs font-mono font-semibold mb-1">{step.number}</div>
+                  <h4 className="text-white font-bold text-lg mb-2">{step.title}</h4>
+                  <p className="text-slate-400 text-sm leading-relaxed">{step.description}</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, delay: 1 }}
+        className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 backdrop-blur-xl rounded-2xl p-6 border border-blue-500/20"
+      >
+        <div className="flex items-start gap-3">
+          <AlertCircle className="text-blue-400 flex-shrink-0 mt-1" size={20} />
+          <div>
+            <h4 className="text-white font-semibold mb-1">Risk-Free Participation</h4>
+            <p className="text-slate-400 text-sm leading-relaxed">
+              You can withdraw your principal deposit at any time. Only the generated interest is used as the prize pool, ensuring your original deposit is always safe.
+            </p>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+export default NoLossLotteryDApp;
