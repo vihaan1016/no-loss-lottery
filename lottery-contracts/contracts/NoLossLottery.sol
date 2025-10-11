@@ -14,6 +14,7 @@ interface IERC20 {
 interface IPool {
     function supply(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external;
     function withdraw(address asset, uint256 amount, address to) external returns (uint256);
+    function accrueInterestTo(address beneficiary) external;
 }
 
 interface IAToken {
@@ -23,19 +24,18 @@ interface IAToken {
 
 contract NoLossLottery is VRFConsumerBaseV2 {
 
-    IERC20 public immutable depositToken; // e.g., USDC address
-    IPool public immutable aavePool; // Aave Pool address
-    address public aTokenAddress; // The address of the corresponding aToken
-    address[] public players; // List of players in the lottery
-    uint256 public lotteryDuration = 7 days; // Duration of each lottery round
-    uint256 public lotteryStartTime; // Start time of the current lottery round
-    address public lastWinner; //  Last winner of the lottery
-    uint256 public lastWinningAmount; // Amount won in the last lottery
+    IERC20 public immutable depositToken;
+    IPool public immutable aavePool;
+    address public aTokenAddress;
+    address[] public players;
+    uint256 public lotteryDuration = 7 days;
+    uint256 public lotteryStartTime;
+    address public lastWinner;
+    uint256 public lastWinningAmount;
     mapping(address => bool) public isPlayer;
-    mapping(address => uint256) public userDeposits; // Mapping to track individual user deposits
+    mapping(address => uint256) public userDeposits;
     uint256 public totalPrincipal;
 
-    // Chainlink VRF Variables
     VRFCoordinatorV2Interface private immutable i_vrfCoordinator;
     bytes32 private immutable i_keyHash;
     uint64 private immutable i_subscriptionId;
@@ -56,14 +56,6 @@ contract NoLossLottery is VRFConsumerBaseV2 {
     event WinnerPicked(address indexed winner, uint256 prize, uint256 requestId);
 
     
-    // Constructor is used to initialize the contract with token, Aave pool addresses, and VRF configuration
-    // _depositToken: Address of the ERC20 token to be deposited
-    // _aavePool: Address of the Aave V3 Pool contract
-    // _aTokenAddress: Address of the corresponding aToken
-    // _vrfCoordinatorV2: Address of the Chainlink VRF Coordinator
-    // _keyHash: Gas lane key hash for VRF
-    // _subscriptionId: Chainlink VRF subscription ID
-    // _callbackGasLimit: Gas limit for the fulfillRandomWords callback
     constructor(
         address _depositToken,
         address _aavePool,
@@ -92,79 +84,57 @@ contract NoLossLottery is VRFConsumerBaseV2 {
     }
     
 
-    // Deposit function allows users to deposit tokens into the contract and then supplies them to Aave
-    // _amount: Amount of tokens to deposit
-    // User must approve this contract to spend their tokens before calling this function
     function deposit(uint256 _amount) external {
         require(_amount > 0, "Amount must be greater than 0");
         
-        // Transfer tokens from user to this contract
         require(
             depositToken.transferFrom(msg.sender, address(this), _amount),
             "Transfer failed"
         );
         
-        // Approve Aave Pool to spend the tokens
         require(
             depositToken.approve(address(aavePool), _amount),
             "Approval failed"
         );
         
-        // Supply tokens to Aave
         aavePool.supply(address(depositToken), _amount, address(this), 0);
         
-        // Mark as player if first deposit
         if (!isPlayer[msg.sender]) {
             isPlayer[msg.sender] = true;
             players.push(msg.sender);
         }
         
-        // Track user's deposit
         userDeposits[msg.sender] += _amount;
         totalPrincipal += _amount;
         
         emit Deposited(msg.sender, _amount);
     }
 
-    // Withdraw function allows users to withdraw their deposited tokens from Aave back to their wallet
-    // _amount: Amount of tokens to withdraw
     function withdraw(uint256 _amount) external {
         require(_amount > 0, "Amount must be greater than 0");
         require(userDeposits[msg.sender] >= _amount, "Insufficient balance");
         
-        // Withdraw from Aave to this contract
         uint256 withdrawn = aavePool.withdraw(address(depositToken), _amount, address(this));
         
-        // Transfer tokens back to user
         require(
             depositToken.transfer(msg.sender, withdrawn),
             "Transfer failed"
         );
         
-        // Update user's balance
         userDeposits[msg.sender] -= _amount;
         totalPrincipal -= _amount;
         
         emit Withdrawn(msg.sender, withdrawn);
     }
 
-    // getUserBalance returns the deposited balance of a user
-    // _user: Address of the user
-    // Returns the amount deposited by the user
     function getUserBalance(address _user) external view returns (uint256) {
         return userDeposits[_user];
     }
 
 
-    // Calculates the prize (yield earned) from Aave deposits
-    // Prize is the difference between total Aave balance and total principal deposited
-    // Returns the amount of yield earned
     function calculatePrize() public view returns (uint256 prize) {
-        // Get the total balance held in Aave (principal + yield)
         uint256 totalAaveBalance = IAToken(aTokenAddress).balanceOf(address(this));
         
-        // Calculate prize as the difference between Aave balance and total principal
-        // If totalAaveBalance < totalPrincipal (shouldn't happen but safety check)
         if (totalAaveBalance > totalPrincipal) {
             prize = totalAaveBalance - totalPrincipal;
         } else {
@@ -174,14 +144,12 @@ contract NoLossLottery is VRFConsumerBaseV2 {
         return prize;
     }
 
-    // Request a random winner using Chainlink VRF (Owner only)
-    // This function kicks off the randomness request process
-    // Can only be called after the lottery duration has passed
     function pickWinner() external onlyOwner {
-        require(block.timestamp >= lotteryStartTime + lotteryDuration, "Lottery duration not yet passed");
         require(players.length > 0, "No players in the lottery");
         
-        // Request random words from Chainlink VRF
+        // Accrue interest before picking winner
+        IPool(aavePool).accrueInterestTo(address(this));
+        
         uint256 requestId = i_vrfCoordinator.requestRandomWords(
             i_keyHash,
             i_subscriptionId,
@@ -193,59 +161,45 @@ contract NoLossLottery is VRFConsumerBaseV2 {
         emit WinnerRequested(requestId);
     }
 
-    // Callback function called by Chainlink VRF Coordinator with the random number
-    // This function is called automatically by Chainlink after randomness is generated
-    // requestId: The ID of the VRF request
-    // randomWords: Array containing the random number(s) generated
     function fulfillRandomWords(
         uint256 requestId,
         uint256[] memory randomWords
     ) internal override {
         require(players.length > 0, "No players in the lottery");
         
-        // Select winner using the random number
         uint256 randomIndex = randomWords[0] % players.length;
         address winner = players[randomIndex];
         
-        // Calculate the prize (interest earned)
         uint256 prize = calculatePrize();
         
-        // Only proceed if there's a prize to distribute
         if (prize > 0) {
-            // Withdraw only the prize amount from Aave
             aavePool.withdraw(address(depositToken), prize, address(this));
             
-            // Transfer the prize to the winner
             require(
                 depositToken.transfer(winner, prize),
                 "Prize transfer failed"
             );
         }
         
-        // Update state variables
         lastWinner = winner;
         lastWinningAmount = prize;
-        lotteryStartTime = block.timestamp; // Reset for next lottery round
+        lotteryStartTime = block.timestamp;
         
         emit WinnerPicked(winner, prize, requestId);
     }
 
-    // Get the current list of players
     function getPlayers() external view returns (address[] memory) {
         return players;
     }
 
-    // Get the number of players in the current lottery
     function getPlayerCount() external view returns (uint256) {
         return players.length;
     }
 
-    // Check if the lottery has ended
     function hasLotteryEnded() external view returns (bool) {
         return block.timestamp >= lotteryStartTime + lotteryDuration;
     }
 
-    // Get time remaining in the current lottery round
     function getTimeRemaining() external view returns (uint256) {
         uint256 endTime = lotteryStartTime + lotteryDuration;
         if (block.timestamp >= endTime) {

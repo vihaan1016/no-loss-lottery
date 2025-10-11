@@ -16,7 +16,8 @@ contract MockVRFCoordinator is VRFCoordinatorV2Interface {
     uint256 public constant MAX_REQUEST_VALUE = 1000000000000000000; // 1 LINK
     
     // Storage
-    mapping(uint256 => address) public consumers;
+    mapping(uint256 => address) public subscriptionOwners;
+    mapping(uint256 => address[]) public subscriptionConsumers;
     mapping(uint256 => uint256) public requestCounts;
     
     event RequestRandomWords(
@@ -37,84 +38,108 @@ contract MockVRFCoordinator is VRFCoordinatorV2Interface {
         bool success
     );
     
+    event SubscriptionCreated(uint64 indexed subId, address owner);
+    event SubscriptionConsumerAdded(uint64 indexed subId, address consumer);
+    
     constructor() {}
     
     function createSubscription() external override returns (uint64) {
-        uint64 subId = uint64(block.timestamp);
-        consumers[subId] = msg.sender;
+        uint64 subId = uint64(block.timestamp + uint256(uint160(msg.sender)));
+        subscriptionOwners[subId] = msg.sender;
+        emit SubscriptionCreated(subId, msg.sender);
         return subId;
     }
     
-   function requestRandomWords(
-    bytes32 keyHash,
-    uint64 subId,
-    uint16 requestConfirmations,
-    uint32 callbackGasLimit,
-    uint32 numWords
-) external override returns (uint256) {
-    // The check for `consumers[subId] == msg.sender` is removed as the logic is now handled by `addConsumer`
-    require(numWords <= MAX_NUM_WORDS, "Too many random words requested");
-    require(requestConfirmations <= MAX_REQUEST_CONFIRMATIONS, "Too many confirmations");
-    uint256 requestId = uint256(keccak256(abi.encodePacked(
-        block.timestamp,
-        block.prevrandao,
-        msg.sender,
-        requestCounts[subId]
-    )));
-    requestCounts[subId]++;
-
-    emit RequestRandomWords(
-        keyHash,
-        requestId,
-        uint256(blockhash(block.number - 1)),
-        subId,
-        requestConfirmations,
-        callbackGasLimit,
-        numWords,
-        ""
-    );
-
-    // Immediately fulfill the request with mock random words
-    uint256[] memory randomWords = new uint256[](numWords);
-    for (uint32 i = 0; i < numWords; i++) {
-        randomWords[i] = uint256(keccak256(abi.encodePacked(
+    function requestRandomWords(
+        bytes32 keyHash,
+        uint64 subId,
+        uint16 requestConfirmations,
+        uint32 callbackGasLimit,
+        uint32 numWords
+    ) external override returns (uint256) {
+        // Check if msg.sender is a valid consumer for this subscription
+        require(_isValidConsumer(subId, msg.sender), "Invalid consumer");
+        require(numWords <= MAX_NUM_WORDS, "Too many random words requested");
+        require(requestConfirmations <= MAX_REQUEST_CONFIRMATIONS, "Too many confirmations");
+        
+        uint256 requestId = uint256(keccak256(abi.encodePacked(
             block.timestamp,
             block.prevrandao,
-            requestId,
-            i
+            msg.sender,
+            requestCounts[subId]
         )));
-    }
+        requestCounts[subId]++;
 
-    // Call the consumer's fulfillRandomWords function
-    (bool success, ) = msg.sender.call(
-        abi.encodeWithSignature(
-            "rawFulfillRandomWords(uint256,uint256[])",
+        emit RequestRandomWords(
+            keyHash,
             requestId,
-            randomWords
-        )
-    );
-    emit RandomWordsFulfilled(requestId, uint256(blockhash(block.number - 1)), 0, success);
+            uint256(blockhash(block.number - 1)),
+            subId,
+            requestConfirmations,
+            callbackGasLimit,
+            numWords,
+            ""
+        );
 
-    return requestId;
-}
+        // Immediately fulfill the request with mock random words
+        uint256[] memory randomWords = new uint256[](numWords);
+        for (uint32 i = 0; i < numWords; i++) {
+            randomWords[i] = uint256(keccak256(abi.encodePacked(
+                block.timestamp,
+                block.prevrandao,
+                requestId,
+                i
+            )));
+        }
+
+        // Call the consumer's fulfillRandomWords function
+        (bool success, ) = msg.sender.call(
+            abi.encodeWithSignature(
+                "rawFulfillRandomWords(uint256,uint256[])",
+                requestId,
+                randomWords
+            )
+        );
+        emit RandomWordsFulfilled(requestId, uint256(blockhash(block.number - 1)), 0, success);
+
+        return requestId;
+    }
     
     function addConsumer(uint64 subId, address consumer) external override {
-    require(consumers[subId] == msg.sender, "Invalid subscription");
-    // This mock simplifies things by only allowing one consumer per subscription.
-    // When adding a new consumer, we are replacing the old one.
-    // In our test, this replaces the 'owner' with the 'lottery contract' as the valid consumer.
-    consumers[subId] = consumer;
-}
+        require(subscriptionOwners[subId] == msg.sender, "Invalid subscription owner");
+        
+        // Check if consumer is already added
+        address[] storage consumers = subscriptionConsumers[subId];
+        for (uint256 i = 0; i < consumers.length; i++) {
+            if (consumers[i] == consumer) {
+                return; // Already added, just return
+            }
+        }
+        
+        // Add new consumer
+        subscriptionConsumers[subId].push(consumer);
+        emit SubscriptionConsumerAdded(subId, consumer);
+    }
     
     function removeConsumer(uint64 subId, address consumer) external override {
-        require(consumers[subId] == msg.sender, "Invalid subscription");
-        // Mock implementation - just emit event
+        require(subscriptionOwners[subId] == msg.sender, "Invalid subscription owner");
+        
+        address[] storage consumers = subscriptionConsumers[subId];
+        for (uint256 i = 0; i < consumers.length; i++) {
+            if (consumers[i] == consumer) {
+                // Remove by swapping with last element and popping
+                consumers[i] = consumers[consumers.length - 1];
+                consumers.pop();
+                break;
+            }
+        }
     }
     
     function cancelSubscription(uint64 subId, address to) external override {
-        require(consumers[subId] == msg.sender, "Invalid subscription");
-        delete consumers[subId];
-        // Mock implementation
+        require(subscriptionOwners[subId] == msg.sender, "Invalid subscription owner");
+        delete subscriptionOwners[subId];
+        delete subscriptionConsumers[subId];
+        // Mock implementation - in real VRF, would refund LINK tokens to 'to' address
     }
     
     function getSubscription(uint64 subId) external view override returns (
@@ -123,7 +148,12 @@ contract MockVRFCoordinator is VRFCoordinatorV2Interface {
         address owner,
         address[] memory consumers_list
     ) {
-        return (uint96(0), uint64(requestCounts[subId]), consumers[subId], new address[](0));
+        return (
+            uint96(0), 
+            uint64(requestCounts[subId]), 
+            subscriptionOwners[subId], 
+            subscriptionConsumers[subId]
+        );
     }
     
     function getRequestConfig() external pure override returns (
@@ -135,7 +165,7 @@ contract MockVRFCoordinator is VRFCoordinatorV2Interface {
     }
     
     function requestSubscriptionOwnerTransfer(uint64 subId, address newOwner) external override {
-        require(consumers[subId] == msg.sender, "Invalid subscription");
+        require(subscriptionOwners[subId] == msg.sender, "Invalid subscription owner");
         // Mock implementation
     }
     
@@ -145,5 +175,21 @@ contract MockVRFCoordinator is VRFCoordinatorV2Interface {
     
     function pendingRequestExists(uint64 subId) external view override returns (bool) {
         return false; // Mock always returns false
+    }
+    
+    // Helper function to check if an address is a valid consumer
+    function _isValidConsumer(uint64 subId, address consumer) internal view returns (bool) {
+        address[] storage consumers = subscriptionConsumers[subId];
+        for (uint256 i = 0; i < consumers.length; i++) {
+            if (consumers[i] == consumer) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    // Helper function for testing - get consumers for a subscription
+    function getConsumers(uint64 subId) external view returns (address[] memory) {
+        return subscriptionConsumers[subId];
     }
 }

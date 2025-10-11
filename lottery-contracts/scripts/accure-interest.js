@@ -14,6 +14,7 @@ async function main() {
     console.log("Usage: npx hardhat run scripts/fast-forward.js --network localhost <AAVE_POOL_ADDRESS> <LOTTERY_ADDRESS>\n");
     console.log("Or update the addresses directly in this script.\n");
     
+    // You can hardcode addresses here after deployment for easier demo
     AAVE_POOL_ADDRESS = "PASTE_YOUR_AAVE_POOL_ADDRESS_HERE";
     LOTTERY_ADDRESS = "PASTE_YOUR_LOTTERY_ADDRESS_HERE";
     
@@ -25,9 +26,9 @@ async function main() {
   
   const [deployer] = await hre.ethers.getSigners();
   
-  console.log("\n╔══════════════════════════════════════════════════════════╗");
+  console.log("\n╔════════════════════════════════════════════════════╗");
   console.log("║     FAST-FORWARD TIME & ACCRUE INTEREST           ║");
-  console.log("╚══════════════════════════════════════════════════════════╝\n");
+  console.log("╚════════════════════════════════════════════════════╝\n");
   
   console.log("🔧 Configuration:");
   console.log("   Aave Pool:", AAVE_POOL_ADDRESS);
@@ -106,9 +107,8 @@ async function main() {
       console.log("");
       console.log("Next steps for your demo:");
       console.log("1. Call pickWinner() from the owner account");
-      console.log("2. Interest accrual is now automatic in pickWinner()");
-      console.log("3. Winner will receive: " + hre.ethers.formatUnits(newPrize, 18) + " tokens");
-      console.log("4. All users keep their principal deposits");
+      console.log("2. The winner will receive: " + hre.ethers.formatUnits(newPrize, 18) + " tokens");
+      console.log("3. All users keep their principal deposits");
     } else {
       console.log("⚠️  No prize generated yet. This could mean:");
       console.log("   - No deposits have been made");
@@ -120,9 +120,9 @@ async function main() {
     console.log("❌ Error checking updated state:", error.message);
   }
   
-  console.log("\n╔══════════════════════════════════════════════════════════╗");
+  console.log("\n╔════════════════════════════════════════════════════╗");
   console.log("║              OPERATION COMPLETE                   ║");
-  console.log("╚══════════════════════════════════════════════════════════╝\n");
+  console.log("╚════════════════════════════════════════════════════╝\n");
 }
 
 main()

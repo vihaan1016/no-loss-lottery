@@ -25,7 +25,6 @@ async function main() {
   // Deploy Mock Aave Pool
   console.log("\n3. Deploying Mock Aave Pool...");
   const MockAavePool = await hre.ethers.getContractFactory("MockAavePool");
-  // Pass the aTokenAddress to the constructor
   const aavePool = await MockAavePool.deploy(aTokenAddress);
   await aavePool.waitForDeployment();
   const aavePoolAddress = await aavePool.getAddress();
@@ -41,9 +40,15 @@ async function main() {
 
   // Create VRF subscription
   console.log("\n5. Creating VRF Subscription...");
-  const subscriptionId = await vrfCoordinator.createSubscription.staticCall();
-  const subTx = await vrfCoordinator.createSubscription();
-  await subTx.wait();
+  const createSubTx = await vrfCoordinator.createSubscription();
+  const createSubReceipt = await createSubTx.wait();
+  
+  // Extract subscription ID from the event
+  const subscriptionCreatedEvent = createSubReceipt.logs.find(
+    log => log.fragment && log.fragment.name === 'SubscriptionCreated'
+  );
+  const subscriptionId = subscriptionCreatedEvent.args.subId;
+  
   console.log("VRF Subscription created with ID:", subscriptionId.toString());
 
   // Deploy NoLossLottery
@@ -62,8 +67,14 @@ async function main() {
   const lotteryAddress = await lottery.getAddress();
   console.log("No Loss Lottery deployed to:", lotteryAddress);
 
+  // Add lottery contract as VRF consumer
+  console.log("\n7. Adding lottery as VRF consumer...");
+  const addConsumerTx = await vrfCoordinator.addConsumer(subscriptionId, lotteryAddress);
+  await addConsumerTx.wait();
+  console.log("Lottery added as VRF consumer");
+
   // Setup: Transfer USDC to contracts for testing
-  console.log("\n7. Setting up test environment...");
+  console.log("\n8. Setting up test environment...");
   const transferAmount = hre.ethers.parseUnits("1000000", 18);
   
   await usdc.connect(deployer).transfer(aTokenAddress, transferAmount);
@@ -82,10 +93,12 @@ async function main() {
   console.log("Mock Aave Pool:", aavePoolAddress);
   console.log("Mock VRF Coordinator:", vrfCoordinatorAddress);
   console.log("No Loss Lottery:", lotteryAddress);
+  console.log("VRF Subscription ID:", subscriptionId.toString());
   console.log("\n=================================");
   console.log("\nUpdate these addresses in your React app:");
   console.log("const LOTTERY_ADDRESS =", `'${lotteryAddress}';`);
   console.log("const TOKEN_ADDRESS =", `'${usdcAddress}';`);
+  console.log("const AAVE_POOL_ADDRESS =", `'${aavePoolAddress}';`);
   console.log("=================================\n");
 }
 
