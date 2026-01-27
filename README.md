@@ -6,10 +6,10 @@ A revolutionary decentralized lottery system where participants never lose their
 
 The No Loss Lottery is a complete full-stack decentralized application (DApp) consisting of:
 
-- **🔗 Smart Contracts**: Solidity contracts managing the lottery logic
-- **🎨 Frontend DApp**: React-based web interface for user interaction
-- **🔒 Security**: Principal protection with yield-only prizes
-- **🎯 Fairness**: Chainlink VRF for provably random winner selection
+- ** Smart Contracts**: Solidity contracts managing the lottery logic
+- ** Frontend DApp**: React-based web interface for user interaction
+- ** Security**: Principal protection with yield-only prizes
+- ** Fairness**: Chainlink VRF for provably random winner selection
 
 ### Key Innovation
 
