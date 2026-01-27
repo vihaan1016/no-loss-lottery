@@ -2,7 +2,7 @@
 
 A revolutionary decentralized lottery system where participants never lose their principal investment. Users deposit tokens that earn yield through DeFi protocols, and only the generated interest is used as lottery prizes, ensuring 100% principal protection.
 
-## 🌟 Project Overview
+## Project Overview
 
 The No Loss Lottery is a complete full-stack decentralized application (DApp) consisting of:
 
